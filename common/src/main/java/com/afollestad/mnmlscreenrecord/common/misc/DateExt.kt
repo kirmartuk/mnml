@@ -15,6 +15,7 @@
  */
 package com.afollestad.mnmlscreenrecord.common.misc
 
+import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -33,6 +34,11 @@ fun Long.friendlyDate(): String {
   if (this <= 0) {
     return "Invalid"
   }
-  val df = SimpleDateFormat("MMM d, hh:mm a", Locale.getDefault())
-  return df.format(this)
+  //val df = SimpleDateFormat("MMM d, hh:mm a", Locale.getDefault())
+  val df = SimpleDateFormat("hh:mm • dd.MM.yyyy", Locale.getDefault())
+  return df.format(this.millisecondsToMicro())
+}
+
+fun Long.millisecondsToMicro(): Long {
+  return this * 1000
 }
