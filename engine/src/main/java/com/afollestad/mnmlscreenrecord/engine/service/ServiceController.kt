@@ -17,6 +17,7 @@ package com.afollestad.mnmlscreenrecord.engine.service
 
 import android.app.Application
 import android.content.Intent
+import android.util.Log
 import com.afollestad.mnmlscreenrecord.notifications.EXTRA_STOP_FOREGROUND
 import com.afollestad.mnmlscreenrecord.notifications.RECORD_ACTION
 import com.afollestad.mnmlscreenrecord.notifications.STOP_ACTION
@@ -65,6 +66,7 @@ class RealServiceController(
   }
 
   override fun stopRecording(stopService: Boolean) {
+    Log.e("stop", "true")
     app.sendBroadcast(Intent(STOP_ACTION).apply {
       putExtra(EXTRA_STOP_FOREGROUND, stopService)
     })

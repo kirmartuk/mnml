@@ -34,6 +34,7 @@ import org.koin.core.qualifier.named
 class SettingsQualityFragment : BaseSettingsFragment() {
 
   private val frameRatePref by inject<Pref<Int>>(named(PREF_FRAME_RATE))
+
   // private val resolutionWidthPref by inject<Pref<Int>>(named(PREF_RESOLUTION_WIDTH))
   // private val resolutionHeightPref by inject<Pref<Int>>(named(PREF_RESOLUTION_HEIGHT))
   private val videoBitRatePref by inject<Pref<Int>>(named(PREF_VIDEO_BIT_RATE))
@@ -62,8 +63,8 @@ class SettingsQualityFragment : BaseSettingsFragment() {
       MaterialDialog(settingsActivity).show {
         title(R.string.setting_framerate)
         listItemsSingleChoice(
-            res = R.array.frame_rate_options,
-            initialSelection = defaultIndex
+          res = R.array.frame_rate_options,
+          initialSelection = defaultIndex
         ) { _, which, _ ->
           frameRatePref.set(rawValues[which])
         }
@@ -72,18 +73,18 @@ class SettingsQualityFragment : BaseSettingsFragment() {
       true
     }
     frameRatePref.observe()
-        .distinctUntilChanged()
-        .subscribe {
-          frameRateEntry.summary = getString(R.string.setting_framerate_desc, it)
-        }
-        .attachLifecycle(this)
+      .distinctUntilChanged()
+      .subscribe {
+        frameRateEntry.summary = getString(R.string.setting_framerate_desc, it)
+      }
+      .attachLifecycle(this)
   }
 
   private fun setupResolutionPref() {
     val resolutionEntry = findPreference("resolution")
     resolutionEntry.isEnabled = false
-    resolutionEntry.summary =
-        "Android makes getting this to work hard. Disabled for now. https://github.com/afollestad/mnml"
+    resolutionEntry.summary = getString(R.string.setting_bitrate_disabled)
+
 
     /*
     resolutionEntry.setOnPreferenceClickListener {
@@ -142,8 +143,8 @@ class SettingsQualityFragment : BaseSettingsFragment() {
       MaterialDialog(settingsActivity).show {
         title(R.string.setting_bitrate)
         listItemsSingleChoice(
-            res = R.array.bit_rate_options,
-            initialSelection = defaultIndex
+          res = R.array.bit_rate_options,
+          initialSelection = defaultIndex
         ) { _, which, _ ->
           videoBitRatePref.set(rawValues[which])
         }
@@ -152,11 +153,11 @@ class SettingsQualityFragment : BaseSettingsFragment() {
       true
     }
     videoBitRatePref.observe()
-        .distinctUntilChanged()
-        .subscribe {
-          videoBitRateEntry.summary = getString(R.string.setting_bitrate_desc, it.bitRateString())
-        }
-        .attachLifecycle(this)
+      .distinctUntilChanged()
+      .subscribe {
+        videoBitRateEntry.summary = getString(R.string.setting_bitrate_desc, it.bitRateString())
+      }
+      .attachLifecycle(this)
   }
 
   private fun setupAudioBitRatePref() {
@@ -172,8 +173,8 @@ class SettingsQualityFragment : BaseSettingsFragment() {
       MaterialDialog(context).show {
         title(R.string.setting_audio_bitrate)
         listItemsSingleChoice(
-            res = R.array.audio_bit_rate_options,
-            initialSelection = defaultIndex
+          res = R.array.audio_bit_rate_options,
+          initialSelection = defaultIndex
         ) { _, which, _ ->
           audioBitRatePref.set(rawValues[which])
         }
@@ -182,11 +183,11 @@ class SettingsQualityFragment : BaseSettingsFragment() {
       true
     }
     audioBitRatePref.observe()
-        .distinctUntilChanged()
-        .subscribe {
-          audioBitRateEntry.summary =
-              getString(R.string.setting_audio_bitrate_desc, it.bitRateString())
-        }
-        .attachLifecycle(this)
+      .distinctUntilChanged()
+      .subscribe {
+        audioBitRateEntry.summary =
+          getString(R.string.setting_audio_bitrate_desc, it.bitRateString())
+      }
+      .attachLifecycle(this)
   }
 }

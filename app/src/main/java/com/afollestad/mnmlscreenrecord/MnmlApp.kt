@@ -59,7 +59,7 @@ class MnmlApp : Application() {
           prefModule,
           engineModule,
           mainModule,
-          viewModelModule 
+          viewModelModule
         )
 
       )

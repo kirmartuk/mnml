@@ -17,9 +17,11 @@ package com.afollestad.mnmlscreenrecord.engine.quicksetting
 
 import android.graphics.drawable.Icon
 import android.os.Build.VERSION_CODES.N
+import android.os.Handler
 import android.service.quicksettings.Tile.STATE_ACTIVE
 import android.service.quicksettings.Tile.STATE_INACTIVE
 import android.service.quicksettings.TileService
+import android.util.Log
 import androidx.annotation.RequiresApi
 import com.afollestad.mnmlscreenrecord.engine.R
 import com.afollestad.mnmlscreenrecord.engine.capture.CaptureEngine
@@ -66,5 +68,9 @@ class QuickSettingService : TileService() {
     } else {
       serviceController.startRecording()
     }
+    //add delay, because tile hasn't time to update
+    Handler().postDelayed({
+      updateTile()
+    }, 300)
   }
 }
