@@ -76,222 +76,234 @@ import kotlinx.android.synthetic.main.include_appbar.toolbar_title as toolbarTit
 /** @author Aidan Follestad (afollestad) */
 class MainActivity : DarkModeSwitchActivity(), OverlayExplanationCallback {
 
-    private val viewModel by viewModel<MainViewModel>()
-    private val urlLauncher by inject<UrlLauncher> { parametersOf(this) }
+  private val viewModel by viewModel<MainViewModel>()
+  private val urlLauncher by inject<UrlLauncher> { parametersOf(this) }
 
-    private val dataSource =
-        emptySelectableDataSourceTyped<Recording>().apply {
-            onSelectionChange {
-                if (it.hasSelection()) {
-                    if (toolbar.navigationIcon == null) {
-                        toolbar.run {
-                            setNavigationIcon(R.drawable.ic_close)
-                            menu.clear()
-                            inflateMenu(R.menu.edit_mode)
-                        }
-                    }
-                    toolbarTitle.text =
-                        getString(R.string.app_name_short_withNumber, it.getSelectionCount())
-                    toolbar.menu.run {
-                        findItem(R.id.share).isVisible = it.getSelectionCount() == 1
-                        findItem(R.id.delete).isEnabled = it.getSelectionCount() > 0
-                    }
-                } else {
-                    toolbar.run {
-                        navigationIcon = null
-                        menu.clear()
-                        inflateMenu(R.menu.main)
-                    }
-                    toolbarTitle.text = getString(R.string.app_name_short)
-                }
+  private val dataSource =
+    emptySelectableDataSourceTyped<Recording>().apply {
+      onSelectionChange {
+        if (it.hasSelection()) {
+          if (toolbar.navigationIcon == null) {
+            toolbar.run {
+              setNavigationIcon(R.drawable.ic_close)
+              menu.clear()
+              inflateMenu(R.menu.edit_mode)
             }
-        }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        setupToolbar()
-        setupGrid()
-
-        fab.onDebouncedClick { viewModel.fabClicked() }
-        lifecycle.addObserver(viewModel)
-
-        viewModel.onRecordings()
-            .observe(this, Observer {
-                dataSource.set(
-                    newItems = it,
-                    areTheSame = Recording.Companion::areTheSame,
-                    areContentsTheSame = Recording.Companion::areContentsTheSame
-                )
-            })
-        viewModel.onFabColorRes()
-            .asBackgroundTint(this, fab)
-        viewModel.onFabIconRes()
-            .asIcon(this, fab)
-        viewModel.onFabTextRes()
-            .asText(this, fab)
-        viewModel.onFabEnabled()
-            .asEnabled(this, fab)
-
-        viewModel.onNeedOverlayPermission()
-            .observeOn(mainThread())
-            .subscribe { OverlayExplanationDialog.show(this) }
-            .attachLifecycle(this)
-        viewModel.onNeedStoragePermission()
-            .observeOn(mainThread())
-            .subscribe { onShouldAskForStoragePermission() }
-            .attachLifecycle(this)
-        viewModel.onError()
-            .observeOn(mainThread())
-            .subscribe { ErrorDialogActivity.show(this, it) }
-            .attachLifecycle(this)
-
-        checkForMediaProjectionAvailability()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        invalidateToolbarElevation(list.computeVerticalScrollOffset())
-    }
-
-    override fun onBackPressed() {
-        if (dataSource.hasSelection()) {
-            dataSource.deselectAll()
+          }
+          toolbarTitle.text =
+            getString(R.string.app_name_short_withNumber, it.getSelectionCount())
+          toolbar.menu.run {
+            findItem(R.id.share).isVisible = it.getSelectionCount() == 1
+            findItem(R.id.delete).isEnabled = it.getSelectionCount() > 0
+            findItem(R.id.select_all).setIcon(
+              if (it.size() > it.getSelectionCount()) R.drawable.ic_select_all
+              else R.drawable.ic_select_all_active
+            )
+          }
         } else {
-            super.onBackPressed()
+          toolbar.run {
+            navigationIcon = null
+            menu.clear()
+            inflateMenu(R.menu.main)
+          }
+          toolbarTitle.text = getString(R.string.app_name_short)
         }
+      }
     }
 
-    override fun onShouldAskForOverlayPermission() {
-        val intent = Intent(
-            ACTION_MANAGE_OVERLAY_PERMISSION,
-            "package:$packageName".toUri()
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContentView(R.layout.activity_main)
+    setupToolbar()
+    setupGrid()
+
+    fab.onDebouncedClick { viewModel.fabClicked() }
+    lifecycle.addObserver(viewModel)
+
+    viewModel.onRecordings()
+      .observe(this, Observer {
+        dataSource.set(
+          newItems = it,
+          areTheSame = Recording.Companion::areTheSame,
+          areContentsTheSame = Recording.Companion::areContentsTheSame
         )
-        startActivityForResult(
-            intent = intent,
-            requestCode = DRAW_OVER_OTHER_APP_PERMISSION
-        ) { _, _ ->
-            viewModel.permissionGranted()
-        }
-    }
+      })
+    viewModel.onFabColorRes()
+      .asBackgroundTint(this, fab)
+    viewModel.onFabIconRes()
+      .asIcon(this, fab)
+    viewModel.onFabTextRes()
+      .asText(this, fab)
+    viewModel.onFabEnabled()
+      .asEnabled(this, fab)
 
-    private fun onShouldAskForStoragePermission() {
-        askForPermissions(
-            WRITE_EXTERNAL_STORAGE,
-            requestCode = STORAGE_PERMISSION,
-            rationaleHandler = MnmlRationaleHandler(this)
-        ) { res ->
-            if (!res.isAllGranted(WRITE_EXTERNAL_STORAGE)) {
-                sendBroadcast(Intent(PERMISSION_DENIED))
-                toast(R.string.permission_denied_note)
-            } else {
-                viewModel.permissionGranted()
-            }
-        }
-    }
+    viewModel.onNeedOverlayPermission()
+      .observeOn(mainThread())
+      .subscribe { OverlayExplanationDialog.show(this) }
+      .attachLifecycle(this)
+    viewModel.onNeedStoragePermission()
+      .observeOn(mainThread())
+      .subscribe { onShouldAskForStoragePermission() }
+      .attachLifecycle(this)
+    viewModel.onError()
+      .observeOn(mainThread())
+      .subscribe { ErrorDialogActivity.show(this, it) }
+      .attachLifecycle(this)
 
-    private fun setupToolbar() = toolbar.run {
-        inflateMenu(R.menu.main)
-        setNavigationOnClickListener {
+    checkForMediaProjectionAvailability()
+  }
+
+  override fun onResume() {
+    super.onResume()
+    invalidateToolbarElevation(list.computeVerticalScrollOffset())
+  }
+
+  override fun onBackPressed() {
+    if (dataSource.hasSelection()) {
+      dataSource.deselectAll()
+    } else {
+      super.onBackPressed()
+    }
+  }
+
+  override fun onShouldAskForOverlayPermission() {
+    val intent = Intent(
+      ACTION_MANAGE_OVERLAY_PERMISSION,
+      "package:$packageName".toUri()
+    )
+    startActivityForResult(
+      intent = intent,
+      requestCode = DRAW_OVER_OTHER_APP_PERMISSION
+    ) { _, _ ->
+      viewModel.permissionGranted()
+    }
+  }
+
+  private fun onShouldAskForStoragePermission() {
+    askForPermissions(
+      WRITE_EXTERNAL_STORAGE,
+      requestCode = STORAGE_PERMISSION,
+      rationaleHandler = MnmlRationaleHandler(this)
+    ) { res ->
+      if (!res.isAllGranted(WRITE_EXTERNAL_STORAGE)) {
+        sendBroadcast(Intent(PERMISSION_DENIED))
+        toast(R.string.permission_denied_note)
+      } else {
+        viewModel.permissionGranted()
+      }
+    }
+  }
+
+  private fun setupToolbar() = toolbar.run {
+    inflateMenu(R.menu.main)
+    setNavigationOnClickListener {
+      dataSource.deselectAll()
+    }
+    setOnMenuItemDebouncedClickListener { item ->
+      when (item.itemId) {
+        R.id.about -> AboutDialog.show(this@MainActivity)
+        R.id.provide_feedback -> urlLauncher.viewUrl(
+          "https://github.com/afollestad/mnml/issues/new/choose"
+        )
+        R.id.settings -> startActivity<SettingsActivity>()
+        R.id.share -> shareRecording(dataSource.getSelectedItems().single())
+        R.id.delete -> {
+          viewModel.deleteRecordings(dataSource.getSelectedItems())
+          dataSource.deselectAll()
+        }
+        R.id.select_all -> {
+          if (dataSource.size() == dataSource.getSelectionCount()) {
             dataSource.deselectAll()
+          } else {
+            dataSource.selectAll()
+          }
         }
-        setOnMenuItemDebouncedClickListener { item ->
-            when (item.itemId) {
-                R.id.about -> AboutDialog.show(this@MainActivity)
-                R.id.provide_feedback -> urlLauncher.viewUrl(
-                    "https://github.com/afollestad/mnml/issues/new/choose"
-                )
-                R.id.settings -> startActivity<SettingsActivity>()
-                R.id.share -> shareRecording(dataSource.getSelectedItems().single())
-                R.id.delete -> {
-                    viewModel.deleteRecordings(dataSource.getSelectedItems())
-                    dataSource.deselectAll()
-                }
-            }
-        }
-    }
 
-    @SuppressLint("SetTextI18n")
-    private fun setupGrid() {
-        list.setup {
-            withDataSource(dataSource)
-            withEmptyView(empty_view)
-            withItem<Recording, RecordingViewHolder>(R.layout.list_item_recording) {
-                onBind(::RecordingViewHolder) { _, item ->
-                    Glide.with(thumbnail)
-                        .asBitmap()
-                        .apply(RequestOptions().frame(0))
-                        .load(item.toUri())
-                        .into(itemView.thumbnail)
-                    name.text = item.name
-                    details.text = "${item.sizeString()} – ${item.timestampString()}"
-                    checkBox.showOrHide(isSelected())
-                    checkBox.isChecked = isSelected()
-                }
-                onClick {
-                    if (hasSelection()) {
-                        toggleSelection()
-                    } else {
-                        onRecordingClicked(item)
-                    }
-                }
-                onLongClick {
-                    toggleSelection()
-                }
-            }
-        }
-        list.onScroll {
-            invalidateToolbarElevation(it)
-        }
+      }
     }
+  }
 
-    private fun onRecordingClicked(recording: Recording) {
-        try {
-            startActivity(Intent(ACTION_VIEW).apply {
-                setDataAndType(recording.toUri(), "video/*")
-            })
-        } catch (_: ActivityNotFoundException) {
-            toast(R.string.install_video_viewer)
+  @SuppressLint("SetTextI18n")
+  private fun setupGrid() {
+    list.setup {
+      withDataSource(dataSource)
+      withEmptyView(empty_view)
+      withItem<Recording, RecordingViewHolder>(R.layout.list_item_recording) {
+        onBind(::RecordingViewHolder) { _, item ->
+          Glide.with(thumbnail)
+            .asBitmap()
+            .apply(RequestOptions().frame(0))
+            .load(item.toUri())
+            .into(itemView.thumbnail)
+          name.text = item.name
+          details.text = "${item.sizeString()} – ${item.timestampString()}"
+          checkBox.showOrHide(isSelected())
+          checkBox.isChecked = isSelected()
         }
-    }
-
-    private fun invalidateToolbarElevation(scrollY: Int) {
-        if (scrollY > (toolbar.measuredHeight / 2)) {
-            appToolbar.elevation = resources.getDimension(R.dimen.raised_toolbar_elevation)
-        } else {
-            appToolbar.elevation = 0f
+        onClick {
+          if (hasSelection()) {
+            toggleSelection()
+          } else {
+            onRecordingClicked(item)
+          }
         }
-    }
-
-    private fun shareRecording(recording: Recording) {
-        val uri = recording.toUri()
-        startActivity(Intent(ACTION_SEND).apply {
-            setDataAndType(uri, "video/*")
-            putExtra(EXTRA_STREAM, uri)
-        })
-    }
-
-    private fun checkForMediaProjectionAvailability() {
-        try {
-            Class.forName("android.media.projection.MediaProjectionManager")
-        } catch (e: ClassNotFoundException) {
-            MaterialDialog(this).show {
-                title(text = "Device Unsupported")
-                message(
-                    text = "Your device lacks support for MediaProjectionManager. Either the manufacturer " +
-                            "of your device left it out, or you are using an emulator."
-                )
-                positiveButton(android.R.string.ok) { finish() }
-                cancelOnTouchOutside(false)
-                cancelable(false)
-                onCancel { finish() }
-                onDismiss { finish() }
-            }
+        onLongClick {
+          toggleSelection()
         }
+      }
     }
+    list.onScroll {
+      invalidateToolbarElevation(it)
+    }
+  }
 
-    private companion object {
-        private const val DRAW_OVER_OTHER_APP_PERMISSION = 68
-        private const val STORAGE_PERMISSION = 64
+  private fun onRecordingClicked(recording: Recording) {
+    try {
+      startActivity(Intent(ACTION_VIEW).apply {
+        setDataAndType(recording.toUri(), "video/*")
+      })
+    } catch (_: ActivityNotFoundException) {
+      toast(R.string.install_video_viewer)
     }
+  }
+
+  private fun invalidateToolbarElevation(scrollY: Int) {
+    if (scrollY > (toolbar.measuredHeight / 2)) {
+      appToolbar.elevation = resources.getDimension(R.dimen.raised_toolbar_elevation)
+    } else {
+      appToolbar.elevation = 0f
+    }
+  }
+
+  private fun shareRecording(recording: Recording) {
+    val uri = recording.toUri()
+    startActivity(Intent(ACTION_SEND).apply {
+      setDataAndType(uri, "video/*")
+      putExtra(EXTRA_STREAM, uri)
+    })
+  }
+
+  private fun checkForMediaProjectionAvailability() {
+    try {
+      Class.forName("android.media.projection.MediaProjectionManager")
+    } catch (e: ClassNotFoundException) {
+      MaterialDialog(this).show {
+        title(text = "Device Unsupported")
+        message(
+          text = "Your device lacks support for MediaProjectionManager. Either the manufacturer " +
+            "of your device left it out, or you are using an emulator."
+        )
+        positiveButton(android.R.string.ok) { finish() }
+        cancelOnTouchOutside(false)
+        cancelable(false)
+        onCancel { finish() }
+        onDismiss { finish() }
+      }
+    }
+  }
+
+  private companion object {
+    private const val DRAW_OVER_OTHER_APP_PERMISSION = 68
+    private const val STORAGE_PERMISSION = 64
+  }
 }
