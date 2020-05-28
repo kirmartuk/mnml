@@ -66,7 +66,6 @@ class RealServiceController(
   }
 
   override fun stopRecording(stopService: Boolean) {
-    Log.e("stop", "true")
     app.sendBroadcast(Intent(STOP_ACTION).apply {
       putExtra(EXTRA_STOP_FOREGROUND, stopService)
     })

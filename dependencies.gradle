@@ -26,7 +26,6 @@ ext.versions = [
     androidxBrowser     : '1.0.0',
 
     // Other Google
-    firebaseCore        : '17.0.1',
     lifecycle           : '2.0.0',
 
     // Glide

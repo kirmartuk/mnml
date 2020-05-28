@@ -34,7 +34,6 @@ dependencies {
   implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:' + versions.coroutines
 
   // Google/AndroidX
-  implementation 'com.google.firebase:firebase-core:' + versions.firebaseCore
   implementation 'androidx.preference:preference:' + versions.androidxPrefs
   implementation 'androidx.lifecycle:lifecycle-extensions:' + versions.lifecycle
   kapt 'androidx.lifecycle:lifecycle-compiler:' + versions.lifecycle
@@ -54,22 +53,14 @@ dependencies {
   implementation 'com.github.bumptech.glide:glide:' + versions.glide
   kapt 'com.github.bumptech.glide:compiler:' + versions.glide
 
-  // Debug
-  implementation("com.crashlytics.sdk.android:crashlytics:${versions.fabric}") {
-    transitive = true
-  }
+
 
   // Test
   testImplementation 'junit:junit:' + versions.junit
   testImplementation 'org.mockito:mockito-core:' + versions.mockito
   testImplementation 'com.nhaarman.mockitokotlin2:mockito-kotlin:' + versions.mockitoKotlin
-  testImplementation 'com.google.truth:truth:' + versions.truth
   testImplementation 'androidx.arch.core:core-testing:' + versions.archTesting
   testImplementation project(':testutil')
 }
 
 apply from: '../spotless.gradle'
-apply from: '../mock/mock.gradle'
-
-apply plugin: "io.fabric"
-apply plugin: 'com.google.gms.google-services'
